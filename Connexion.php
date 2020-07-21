@@ -57,16 +57,26 @@ else {
             // set the PDO error mode to exception
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            $statement = $db->prepare("SELECT pseudo FROM user WHERE pseudo = :username AND password = :password");
+            $statement = $db->prepare("SELECT * FROM user WHERE username = :username AND password = :password");
             $statement->bindParam('username', $username);
             $statement->bindParam('password', $password);
 
             $statement->execute();
 
             if ($statement->rowCount() > 0) { // SI LE COUPLE PSEUDO MDP ENTREE EXISTE BIEN
-                $_SESSION["username"] = $username;
-                echo "Vous êtes maintenant connecté ! Vous allez être redirigé automatiquement vers la page d'accueil.";
-                header("refresh:3;url=Accueil.php");
+                try{
+                    $statement = $db->prepare("UPDATE user SET last_connection = '".date("d-m-Y H:i",time())."' WHERE username = :username");
+                    $statement->bindParam('username', $username);
+
+                    $statement->execute();
+                    $_SESSION["username"] = $username;
+                    header('Location: Accueil.php');
+                }
+                catch (PDOException $e) {
+                    echo $e;
+                }
+
+
             }
             else {    // SI LE COUPLE PSEUDO MDP N'EXISTE PAS
                 header('Location: Connexion.php?erreur=1'); // LE COUPLE PSEUDO ET MOT DE PASSE ENTREE EST INCORRECT
@@ -79,3 +89,4 @@ else {
     }
 }
 ?>
+</html>

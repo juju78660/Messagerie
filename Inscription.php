@@ -6,8 +6,6 @@ session_start();
 <head>
     <meta charset="UTF-8">
     <title>Inscription</title>
-    <link rel="stylesheet" type="text/css" href="../../Style/Header_Footer.css">
-    <link rel="stylesheet" type="text/css" href="../../Style/Connexion/Connexion.css">
 </head>
 <body>
 <header>
@@ -56,6 +54,7 @@ else {
     $database = "juson_messagerie";
     $db_username = "juson_principal";
     $db_password = "loluser";
+    //Déclare les variables pour éviter de taper les champs plus tard
 
     // SI UN PSEUDO ET UN PASSWORD EST DEJA DEFINI
     if (isset($_POST['username']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['repeat_password'])) {
@@ -63,19 +62,20 @@ else {
 
         // ON VERIFIE SI LE NOM D'UTILISATEUR EST DEJA UTILISE
         try {
-            $db = new PDO("mysql:host=$servername;dbname=$database", $db_username, $db_password);
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $db = new PDO("mysql:host=$servername;dbname=$database", $db_username, $db_password); //oN REPRENDS LES VARIABLES POUR SE CONNECTER A LA BASE DE DONNEE
+            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); //AFFICHER LES ERREURS SI IL Y A DES EEREURS
 
-            $statement = $db->prepare("SELECT * FROM user WHERE pseudo = '" . $username . "'");
+            $statement = $db->prepare("SELECT * FROM user WHERE username = :username");
+            $statement->bindParam('username', $username);   // REMPLACE LE 'USERNAME' PAR LA VALEUR DE LA VARIABLE USERNAME
 
             $statement->execute();
-            $count = $statement->rowCount();
-            if ($count != 0) {
+            $count = $statement->rowCount();    // COMPTE LE NOMBRE DE LIGNE EN RESULTAT
+            if ($count != 0) {  // SI LE NOMBRE DE LIGNE != 0 ALORS L'UTILISATEUR EXISTE BIEN
                 header('Location: Inscription.php?erreur=3'); // LE NOM D'UTILISATEUR EXISTE DEJA !
             } else {   // SI LE NOM D'UTILISATEUR N'EST PAS DEJA UTILISE
 
                 // ON VERIFIE SI LE MOT DE PASSE ET LE MOT DE PASSE DE REPETITION SONT IDENTIQUES
-                if ($_POST['password'] != $_POST['repeat_password']) {
+                if ($_POST['password'] != $_POST['repeat_password']) {  // SI LE MOT DE PASSE N'EST PAS IDENTIQUE DANS LES DEUX CHAMPS
                     header('Location: Inscription.php?erreur=2'); // LE MOT DE PASSE ENTREE DANS LES DEUX CHAMPS EST DIFFERENT
                 } else {
                     // TOUTE LES CONDITIONS SONT VERIFIES -> ON CREE LE COMPTE
@@ -83,11 +83,7 @@ else {
                     $password = hash('sha512', $_POST['password']);
 
                     try {
-                        $db = new PDO("mysql:host=$servername;dbname=$database", $db_username, $db_password);
-                        // set the PDO error mode to exception
-                        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                        $statement = $db->prepare("INSERT INTO user (pseudo, email, password) VALUES (:username, :email, :password)");
+                        $statement = $db->prepare("INSERT INTO user (username, email, password) VALUES (:username, :email, :password)");
                         $statement->bindParam('username', $username);
                         $statement->bindParam('email', $email);
                         $statement->bindParam('password', $password);
@@ -107,3 +103,4 @@ else {
     }
 }
 ?>
+</html>
