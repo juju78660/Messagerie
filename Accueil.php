@@ -9,21 +9,26 @@ session_start();
 </head>
 <body>
     <header>
+        <p>
+            <a href='Accueil.php?deconnexion'><span>Déconnexion</span></a>
+            <a href='Invitation_Amis.php'><span>Inviter des amis</span></a>
+        </p>
 
-        <a href='Accueil.php?deconnexion'><span>Déconnexion</span></a>
+        <?php
+        if(isset($_GET['deconnexion']))
+        {
+            session_unset();
+            header("location:Connexion.php");
+        }
+        else if(isset($_SESSION['username'])){
+            $user = $_SESSION['username'];
+            $id = $_SESSION['id'];
+            echo "<b>$user - $id</b>";
+        }
+        ?>
+
     </header>
     <h1>Accueil</h1>
-    <?php
 
-    if(isset($_GET['deconnexion']))
-    {
-        session_unset();
-        header("location:Connexion.php");
-    }
-    else if(isset($_SESSION['username'])){
-        $user = $_SESSION['username'];
-        echo "<br>Bonjour <b>$user</b>, vous êtes connecté !";
-    }
-    ?>
 </body>
 </html>

@@ -35,58 +35,30 @@ session_start();
 </body>
 
 <?php
-if(isset($_SESSION['username'])){
-    echo "Vous êtes déjà connecté ! Vous allez être redirigé automatiquement vers la page d'accueil.";
-    header( "refresh:3;url=Accueil.php" );
-}
-else {
+    include 'Fonctions_DB.php';
 
-    $servername = "mysql-juson.alwaysdata.net";
-    $database = "juson_messagerie";
-    $db_username = "juson_principal";
-    $db_password = "loluser";
+    if(isset($_SESSION['username'])){
+        echo "Vous êtes déjà connecté ! Vous allez être redirigé automatiquement vers la page d'accueil.";
+        header( "refresh:3;url=Accueil.php" );
+    }
+    else {
 
-    // ON VERIFIE SI UN PSEUDO ET UN PASSWORD SONT DEJA DEFINIS
-    if (isset($_POST['username']) && isset($_POST['password'])) {
+        // ON VERIFIE SI UN PSEUDO ET UN PASSWORD SONT DEJA DEFINIS
+        if (isset($_POST['username']) && isset($_POST['password'])) {
 
-        $username = $_POST['username'];
-        $password = hash('sha512', $_POST['password']);
+            $username = $_POST['username'];
+            $password = hash('sha512', $_POST['password']);
 
-        try {
-            $db = new PDO("mysql:host=$servername;dbname=$database", $db_username, $db_password);
-            // set the PDO error mode to exception
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-            $statement = $db->prepare("SELECT * FROM user WHERE username = :username AND password = :password");
-            $statement->bindParam('username', $username);
-            $statement->bindParam('password', $password);
-
-            $statement->execute();
-
-            if ($statement->rowCount() > 0) { // SI LE COUPLE PSEUDO MDP ENTREE EXISTE BIEN
-                try{
-                    $statement = $db->prepare("UPDATE user SET last_connection = '".date("d-m-Y H:i",time())."' WHERE username = :username");
-                    $statement->bindParam('username', $username);
-
-                    $statement->execute();
-                    $_SESSION["username"] = $username;
-                    header('Location: Accueil.php');
-                }
-                catch (PDOException $e) {
-                    echo $e;
-                }
-
-
+            if (verif_connexion($username, $password)) { // SI LE COUPLE PSEUDO MDP ENTREE EXISTE BIEN
+                maj_derniere_connexion($username);  // MISE A JOUR DE LA DATE DE DERNIERE CONNEXION
+                header('Location: Accueil.php');    // REDIRECTION VERS LA PAGE ACCUEIL.PHP
             }
             else {    // SI LE COUPLE PSEUDO MDP N'EXISTE PAS
                 header('Location: Connexion.php?erreur=1'); // LE COUPLE PSEUDO ET MOT DE PASSE ENTREE EST INCORRECT
             }
 
-        } catch (PDOException $e) {
-            echo $e;
-        }
 
+        }
     }
-}
 ?>
 </html>

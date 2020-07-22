@@ -44,62 +44,35 @@ session_start();
 </body>
 
 <?php
+include 'Fonctions_DB.php';
+
 if(isset($_SESSION['username'])){
     echo "Vous êtes déjà connecté ! Vous allez être redirigé automatiquement vers la page d'accueil.";
     header( "refresh:3;url=Accueil.php" );
 }
 else {
 
-    $servername = "mysql-juson.alwaysdata.net";
-    $database = "juson_messagerie";
-    $db_username = "juson_principal";
-    $db_password = "loluser";
-    //Déclare les variables pour éviter de taper les champs plus tard
-
-    // SI UN PSEUDO ET UN PASSWORD EST DEJA DEFINI
+    // SI TOUT LES CHAMPS SONT BIEN REMPLIS
     if (isset($_POST['username']) && isset($_POST['email']) && isset($_POST['password']) && isset($_POST['repeat_password'])) {
         $username = $_POST['username'];
 
         // ON VERIFIE SI LE NOM D'UTILISATEUR EST DEJA UTILISE
-        try {
-            $db = new PDO("mysql:host=$servername;dbname=$database", $db_username, $db_password); //oN REPRENDS LES VARIABLES POUR SE CONNECTER A LA BASE DE DONNEE
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); //AFFICHER LES ERREURS SI IL Y A DES EEREURS
+        if (verif_username_existant($username)) {
+            header('Location: Inscription.php?erreur=3'); // LE NOM D'UTILISATEUR EXISTE DEJA !
+        } else {   // SI LE NOM D'UTILISATEUR N'EST PAS DEJA UTILISE
 
-            $statement = $db->prepare("SELECT * FROM user WHERE username = :username");
-            $statement->bindParam('username', $username);   // REMPLACE LE 'USERNAME' PAR LA VALEUR DE LA VARIABLE USERNAME
+            // ON VERIFIE SI LE MOT DE PASSE ET LE MOT DE PASSE DE REPETITION SONT IDENTIQUES
+            if ($_POST['password'] != $_POST['repeat_password']) {  // SI LE MOT DE PASSE N'EST PAS IDENTIQUE DANS LES DEUX CHAMPS
+                header('Location: Inscription.php?erreur=2'); // LE MOT DE PASSE ENTREE DANS LES DEUX CHAMPS EST DIFFERENT
+            } else {
+                // TOUTE LES CONDITIONS SONT VERIFIES -> ON CREE LE COMPTE
+                $email = $_POST['email'];
+                $password = hash('sha512', $_POST['password']);
 
-            $statement->execute();
-            $count = $statement->rowCount();    // COMPTE LE NOMBRE DE LIGNE EN RESULTAT
-            if ($count != 0) {  // SI LE NOMBRE DE LIGNE != 0 ALORS L'UTILISATEUR EXISTE BIEN
-                header('Location: Inscription.php?erreur=3'); // LE NOM D'UTILISATEUR EXISTE DEJA !
-            } else {   // SI LE NOM D'UTILISATEUR N'EST PAS DEJA UTILISE
-
-                // ON VERIFIE SI LE MOT DE PASSE ET LE MOT DE PASSE DE REPETITION SONT IDENTIQUES
-                if ($_POST['password'] != $_POST['repeat_password']) {  // SI LE MOT DE PASSE N'EST PAS IDENTIQUE DANS LES DEUX CHAMPS
-                    header('Location: Inscription.php?erreur=2'); // LE MOT DE PASSE ENTREE DANS LES DEUX CHAMPS EST DIFFERENT
-                } else {
-                    // TOUTE LES CONDITIONS SONT VERIFIES -> ON CREE LE COMPTE
-                    $email = $_POST['email'];
-                    $password = hash('sha512', $_POST['password']);
-
-                    try {
-                        $statement = $db->prepare("INSERT INTO user (username, email, password) VALUES (:username, :email, :password)");
-                        $statement->bindParam('username', $username);
-                        $statement->bindParam('email', $email);
-                        $statement->bindParam('password', $password);
-
-                        $statement->execute();
-                        echo "Votre compte a bien été crée ! Vous allez être redirigé automatiquement vers la page de connexion.";
-                        header("refresh:3;url=Connexion.php");
-                    } catch (PDOException $e) {
-                        echo $e;
-                    }
-                }
+                creation_compte($username, $email, $password);
             }
-
-        } catch (PDOException $e) {
-            echo $e;
         }
+
     }
 }
 ?>
