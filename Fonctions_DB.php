@@ -9,7 +9,7 @@
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // GLOBAL
-    function recup_id_utilisateur(String $username)
+    function recup_id_utilisateur(String $username) : int
     {
         $db = $GLOBALS['db'];
         try {
@@ -22,15 +22,30 @@
             if ($statement->rowCount() > 0) { // SI LE USERNAME EXISTE BIEN
                 return $result["id"];
             }
-            else {    // SI LE USERNAME N'EXISTE PAS
-                return 0;
+        } catch (PDOException $e) {
+            echo $e;
+        }
+        return 0;
+    }
+
+    function recup_username_utilisateur(int $id) : ?String
+    {
+        $db = $GLOBALS['db'];
+        try {
+            $statement = $db->prepare("SELECT * FROM user WHERE id = :id");
+            $statement->bindParam('id', $id);
+
+            $statement->execute();
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+            if ($statement->rowCount() > 0) { // SI LE USERNAME EXISTE BIEN
+                return $result["username"];
             }
         } catch (PDOException $e) {
             echo $e;
         }
+        return null;
     }
-
-
 
     // CONNEXION
 
@@ -114,8 +129,9 @@
     // INVITATION
 
     // RETURN TRUE SI UNE LIGNE DANS LA TABLE USER MET EN RELATION LES 2 PERSONNES / FALSE SINON
-    function verif_deja_ami(int $user_id, int $friend_user_id)
+    function verif_deja_ami(int $user_id, String $friend_username)
     {
+        $friend_user_id = recup_id_utilisateur($friend_username);
         try {
             $db = $GLOBALS['db'];
 
@@ -136,7 +152,8 @@
         }
     }
 
-    function ajout_ami(int $user_id, int $friend_user_id){
+    function ajout_ami(int $user_id, String $friend_username){
+        $friend_user_id = recup_id_utilisateur($friend_username);
         try {
             $db = $GLOBALS['db'];
             $statement = $db->prepare("INSERT INTO friend (user_id, friend_user_id) VALUES (:user_id, :friend_user_id)");
@@ -145,6 +162,35 @@
 
             $statement->execute();
             echo "Votre demande d'amis a bien été envoyée.";
+        } catch (PDOException $e) {
+            echo $e;
+        }
+    }
+
+    function recup_liste_amis(int $user_id){
+        $db = $GLOBALS['db'];
+        try {
+            $statement = $db->prepare("SELECT * FROM friend WHERE user_id = :user_id OR friend_user_id = :user_id");
+            $statement->bindParam('user_id', $user_id);
+
+            $statement->execute();
+            $result = $statement->fetchAll();
+
+            if ($statement->rowCount() > 0) { // SI L'UTILISATEUR A DES AMIS/INVITATIONS
+                //return $result;
+                $liste_amis = array();
+                foreach($result as $key => $element){
+                    $liste_amis[$key] = [
+                        'user_id' => $element['user_id'],
+                        'friend_user_id' => $element['friend_user_id'],
+                        'confirmed' => $element['confirmed']
+                    ];
+                }
+                return $liste_amis;
+            }
+            else {    // SI L'UTILISATEUR N'A PAS D'AMIS/D'INVITATION
+                return $result;
+            }
         } catch (PDOException $e) {
             echo $e;
         }

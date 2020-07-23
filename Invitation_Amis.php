@@ -48,11 +48,26 @@ session_start();
         }
         ?>
     </form>
+    <?php
+        include_once 'Fonctions_DB.php';
+        $resultat = recup_liste_amis($_SESSION['id']);
+        echo ("<table>");
+        echo("<thead><td>Utilisateur</td><td>Ami</td><td>Confirme</td>");
+        foreach($resultat as $element){
+            if (($username = recup_username_utilisateur($element['user_id'])) && ($friend_username = recup_username_utilisateur($element['friend_user_id']))) {
+                echo "<tr>
+                        <td>" . $username . "</td>
+                        <td>" . $friend_username ."</td>
+                        <td>" . $element['confirmed'] ."</td>
+                      </tr>";
+            }
+        }
+        echo ("</table>");
+    ?>
     </body>
     </html>
 <?php
-
-    include 'Fonctions_DB.php';
+    include_once 'Fonctions_DB.php';
 
     /* VERIFICATIONS A FAIRE POUR UNE DEMANDE D'AMIS:
         ON VERIFIE SI L'UTILISATEUR NE S'AJOUTE PAS LUI MEME
@@ -89,12 +104,12 @@ if (isset($_POST['username'])) {
         else {   // SI LE NOM D'UTILISATEUR EXISTE BIEN
 
             // ON VERIFIE QU'ILS NE SONT PAS DEJA AMIS OU QU'UNE INVITATION N'EXISTE PAS
-            $friend_user_id = recup_id_utilisateur($friend_username);
-            if (verif_deja_ami($user_id, $friend_user_id)) {
+
+            if (verif_deja_ami($user_id, $friend_username)) {
                 header('Location: Accueil.php?erreur=3');
             }
             else {   // AUCUN LIEN N'EXISTE DEJA
-                ajout_ami($user_id, $friend_user_id);
+                ajout_ami($user_id, $friend_username);
             }
         }
     }
