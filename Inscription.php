@@ -9,7 +9,6 @@ session_start();
 </head>
 <body>
 <header>
-
     <a href='Connexion.php'><span>Connexion</span></a>
 </header>
 <h1>Inscription</h1>

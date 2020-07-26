@@ -1,34 +1,16 @@
 <?php
 session_start();
 ?>
-
     <!DOCTYPE html>
     <head>
         <meta charset="UTF-8">
         <title>Invitation Amis</title>
+        <link rel="stylesheet" type="text/css" href="Style.css">
     </head>
     <body>
-    <header>
-        <p>
-            <a href='Accueil.php?deconnexion'><span>Déconnexion</span></a>
-            <a href='Accueil.php'><span>Accueil</span></a>
-        </p>
-
-        <?php
-        if(isset($_GET['deconnexion']))
-        {
-            session_unset();
-            header("location:Connexion.php");
-        }
-        else if(isset($_SESSION['username'])){
-            $user = $_SESSION['username'];
-            echo "<b>$user</b>";
-        }
-        ?>
-
-    </header>
-    <h1>Invitation d'amis</h1>
-
+    <?php
+    include 'Header.php';
+    ?>
     <p><b>Ajouter des amis:</b></p>
     <form action="Invitation_Amis.php" method="POST">
         <p>
@@ -48,21 +30,31 @@ session_start();
         }
         ?>
     </form>
+    <p><b>Liste d'amis:</b></p>
     <?php
         include_once 'Fonctions_DB.php';
         $resultat = recup_liste_amis($_SESSION['id']);
         echo ("<table>");
-        echo("<thead><td>Utilisateur</td><td>Ami</td><td>Confirme</td>");
         foreach($resultat as $element){
-            if (($username = recup_username_utilisateur($element['user_id'])) && ($friend_username = recup_username_utilisateur($element['friend_user_id']))) {
-                echo "<tr>
-                        <td>" . $username . "</td>
-                        <td>" . $friend_username ."</td>
-                        <td>" . $element['confirmed'] ."</td>
-                      </tr>";
-            }
+            echo "<tr>
+                        <td>" . $element["friend_username"] ."</td>
+                  </tr>";
         }
         echo ("</table>");
+    ?>
+
+    <p><b>Liste d'invitations:</b></p>
+    <?php
+    include_once 'Fonctions_DB.php';
+    $resultat = recup_liste_invitations($_SESSION['id']);
+    echo ("<table>");
+    foreach($resultat as $element){
+        echo "<tr>
+                        <td>" . $element["friend_username"] ."</td>
+                        <td>EN ATTENTE</td>
+                      </tr>";
+    }
+    echo ("</table>");
     ?>
     </body>
     </html>
@@ -83,11 +75,6 @@ session_start();
     */
 
 if (isset($_POST['username'])) {
-    // DONNEES DE CONNEXION A LA BD
-    $servername = "mysql-juson.alwaysdata.net";
-    $database = "juson_messagerie";
-    $db_username = "juson_principal";
-    $db_password = "loluser";
 
     $user_id = $_SESSION['id'];
     $friend_username = $_POST['username'];
@@ -95,18 +82,18 @@ if (isset($_POST['username'])) {
 
     // ON VERIFIE SI L'UTILISATEUR S'AJOUTE LUI MEME EN AMI
     if($friend_username ==  $username){
-        header('Location: Accueil.php?erreur=1');
+        header('Location: Invitation_Amis.php?erreur=1');
     }
     else{
         if (!verif_username_existant($friend_username)) {   // SI LE NOM D'UTILISATEUR N'EXISTE PAS
-            header('Location: Accueil.php?erreur=2');
+            header('Location: Invitation_Amis.php?erreur=2');
         }
         else {   // SI LE NOM D'UTILISATEUR EXISTE BIEN
 
             // ON VERIFIE QU'ILS NE SONT PAS DEJA AMIS OU QU'UNE INVITATION N'EXISTE PAS
 
             if (verif_deja_ami($user_id, $friend_username)) {
-                header('Location: Accueil.php?erreur=3');
+                header('Location: Invitation_Amis.php?erreur=3');
             }
             else {   // AUCUN LIEN N'EXISTE DEJA
                 ajout_ami($user_id, $friend_username);

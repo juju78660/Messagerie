@@ -1,5 +1,5 @@
 <?php
-
+    // DONNEES DE CONNEXION A LA BD
     $servername = "mysql-juson.alwaysdata.net";
     $database = "juson_messagerie";
     $db_username = "juson_principal";
@@ -170,29 +170,40 @@
     function recup_liste_amis(int $user_id){
         $db = $GLOBALS['db'];
         try {
-            $statement = $db->prepare("SELECT * FROM friend WHERE user_id = :user_id OR friend_user_id = :user_id");
+            $statement = $db->prepare("SELECT u.username AS friend_username, friend_user_id, confirmed FROM friend f, user u WHERE u.id = f.friend_user_id AND (user_id = :user_id OR friend_user_id = :user_id) AND confirmed=1");
             $statement->bindParam('user_id', $user_id);
 
             $statement->execute();
             $result = $statement->fetchAll();
 
             if ($statement->rowCount() > 0) { // SI L'UTILISATEUR A DES AMIS/INVITATIONS
-                //return $result;
-                $liste_amis = array();
-                foreach($result as $key => $element){
-                    $liste_amis[$key] = [
-                        'user_id' => $element['user_id'],
-                        'friend_user_id' => $element['friend_user_id'],
-                        'confirmed' => $element['confirmed']
-                    ];
-                }
-                return $liste_amis;
+                return $result;
             }
             else {    // SI L'UTILISATEUR N'A PAS D'AMIS/D'INVITATION
-                return $result;
+                return null;
             }
         } catch (PDOException $e) {
             echo $e;
         }
     }
+
+function recup_liste_invitations(int $user_id){
+    $db = $GLOBALS['db'];
+    try {
+        $statement = $db->prepare("SELECT u.username AS friend_username, friend_user_id, confirmed FROM friend f, user u WHERE u.id = f.friend_user_id AND (user_id = :user_id OR friend_user_id = :user_id) AND confirmed=0");
+        $statement->bindParam('user_id', $user_id);
+
+        $statement->execute();
+        $result = $statement->fetchAll();
+
+        if ($statement->rowCount() > 0) { // SI L'UTILISATEUR A DES AMIS/INVITATIONS
+            return $result;
+        }
+        else {    // SI L'UTILISATEUR N'A PAS D'AMIS/D'INVITATION
+            return null;
+        }
+    } catch (PDOException $e) {
+        echo $e;
+    }
+}
 ?>
