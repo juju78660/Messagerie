@@ -85,3 +85,10 @@
     border-top: 1px solid black;
 }
 
+.image_button_accept_decline_request{
+    height: 20px;
+    width: 20px;
+}
+.accept_decline_button{
+    border: 0px;
+}

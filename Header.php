@@ -44,7 +44,16 @@
         echo "<a id='disconnect_button' href='Accueil.php?deconnexion'><span>Déconnexion</span></a>";
     }
     else{
-        echo "PAS DE CAS DEFINI";
+        echo "<ul id=\"menu_header\">
+            <li><span class=\"element_menu_active\">Accueil</span></a></li>
+            <li><a class=\"element_menu\" href='Invitation_Amis.php'><span>Invitation</span></a></li>
+            <li><a class=\"element_menu\" href='Message.php'><span>Message</span></a></li>";
+        if(isset($_SESSION['username'])){
+            $user = $_SESSION['username'];
+            echo "<li id='user_menu'>$user</li>";
+        }
+        echo "</ul>";
+        echo "<a id='disconnect_button' href='Accueil.php?deconnexion'><span>Déconnexion</span></a>";
     }
     ?>
 </header>

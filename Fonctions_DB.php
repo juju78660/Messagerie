@@ -13,7 +13,7 @@
     {
         $db = $GLOBALS['db'];
         try {
-            $statement = $db->prepare("SELECT * FROM user WHERE username = :username");
+            $statement = $db->prepare("SELECT id FROM user WHERE username = :username");
             $statement->bindParam('username', $username);
 
             $statement->execute();
@@ -92,12 +92,10 @@
     function verif_username_existant(String $username){
         try {
             $db = $GLOBALS['db'];
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); //AFFICHER LES ERREURS SI IL Y A DES EEREURS
-
             $statement = $db->prepare("SELECT * FROM user WHERE username = :username");
             $statement->bindParam('username', $username);   // REMPLACE LE 'USERNAME' PAR LA VALEUR DE LA VARIABLE USERNAME
-
             $statement->execute();
+
             $count = $statement->rowCount();    // COMPTE LE NOMBRE DE LIGNE EN RESULTAT
             if ($count != 0) {  // SI LE NOMBRE DE LIGNE != 0 ALORS L'UTILISATEUR EXISTE BIEN
                 return true;
@@ -131,11 +129,12 @@
     // RETURN TRUE SI UNE LIGNE DANS LA TABLE USER MET EN RELATION LES 2 PERSONNES / FALSE SINON
     function verif_deja_ami(int $user_id, String $friend_username)
     {
-        $friend_user_id = recup_id_utilisateur($friend_username);
         try {
             $db = $GLOBALS['db'];
 
-            $statement = $db->prepare("SELECT * FROM friend WHERE user_id = :user_id AND friend_user_id = :friend_user_id OR user_id = :friend_user_id AND friend_user_id = :user_id");
+            $friend_user_id = recup_id_utilisateur($friend_username);
+
+            $statement = $db->prepare("SELECT * FROM friend WHERE (user_id = :user_id AND friend_user_id = :friend_user_id) OR (user_id = :friend_user_id AND friend_user_id = :user_id)");
             $statement->bindParam('user_id', $user_id);   // REMPLACE LE 'USERNAME' PAR LA VALEUR DE LA VARIABLE USERNAME
             $statement->bindParam('friend_user_id', $friend_user_id);   // REMPLACE LE 'USERNAME' PAR LA VALEUR DE LA VARIABLE USERNAME
 
@@ -153,30 +152,107 @@
     }
 
     function ajout_ami(int $user_id, String $friend_username){
-        $friend_user_id = recup_id_utilisateur($friend_username);
         try {
             $db = $GLOBALS['db'];
-            $statement = $db->prepare("INSERT INTO friend (user_id, friend_user_id) VALUES (:user_id, :friend_user_id)");
+            $statement = $db->prepare("INSERT INTO friend (user_id, friend_user_id) VALUES (:user_id, (SELECT id FROM user WHERE username = :friend_username));");
             $statement->bindParam('user_id', $user_id);
-            $statement->bindParam('friend_user_id', $friend_user_id);
-
+            $statement->bindParam('friend_username', $friend_username);
             $statement->execute();
-            echo "Votre demande d'amis a bien été envoyée.";
+
+            echo "Votre demande d'ami a bien été envoyée.";
         } catch (PDOException $e) {
             echo $e;
         }
     }
 
+    // FONCTION DE CONFIRMATION D'UNE RELATION D'AMITIE ENTRE DEUX USER
+    // ACTION = 1 : INVITATION ACCEPTEE
+
+function maj_invitation_ami(int $user_id, String $friend_username, int $action){
+    try {
+        $db = $GLOBALS['db'];
+        if($action == 1){
+            // A PARTIR D'UNE DEMANDE D'AMI DE A vers B, on cree la relation B vers A avec confirmed = 1
+            $statement = $db->prepare("INSERT INTO friend (user_id, friend_user_id, confirmed) VALUES (:user_id, (SELECT id FROM user WHERE username = :friend_username), 1)");
+            $statement->bindParam('user_id', $user_id);
+            $statement->bindParam('friend_username', $friend_username);
+            $statement->execute();
+
+            // ON MET A JOUR L'ETAT DE LA DEMANDE A CONFIRMED = 1 POUR LA DEMANDE DE A VERS B
+            $statement = $db->prepare("UPDATE friend SET confirmed = 1 WHERE friend_user_id = :user_id AND  user_id = (SELECT id FROM user WHERE username = :friend_username)");
+            $statement->bindParam('user_id', $user_id);
+            $statement->bindParam('friend_username', $friend_username);
+            $statement->execute();
+        }
+        else{
+            // ON MET A JOUR L'ETAT DE LA DEMANDE A CONFIRMED = 0 POUR LA DEMANDE DE A VERS B
+            $statement = $db->prepare("UPDATE friend SET confirmed = -1 WHERE friend_user_id = :user_id AND  user_id = (SELECT id FROM user WHERE username = :friend_username)");
+            $statement->bindParam('user_id', $user_id);
+            $statement->bindParam('friend_username', $friend_username);
+            $statement->execute();
+        }
+    } catch (PDOException $e) {
+        echo $e;
+    }
+}
+
     function recup_liste_amis(int $user_id){
         $db = $GLOBALS['db'];
         try {
-            $statement = $db->prepare("SELECT u.username AS friend_username, friend_user_id, confirmed FROM friend f, user u WHERE u.id = f.friend_user_id AND (user_id = :user_id OR friend_user_id = :user_id) AND confirmed=1");
+            $statement = $db->prepare("SELECT username, last_connection FROM user WHERE id IN (
+                                            SELECT friend_user_id FROM friend WHERE confirmed = 1 AND user_id = :user_id
+                                            )");
             $statement->bindParam('user_id', $user_id);
-
             $statement->execute();
             $result = $statement->fetchAll();
 
             if ($statement->rowCount() > 0) { // SI L'UTILISATEUR A DES AMIS/INVITATIONS
+                echo "<table>";
+                foreach($result as $element){
+                    $date1 = strtotime($element["last_connection"]);
+                    $date2 = strtotime(date("d-m-Y H:i",time()));
+
+                    $diff = abs($date2 - $date1);
+                    $semaines = floor($diff/604800);
+                    $reste=$diff%604800;
+                    $jours=floor($reste/86400);
+                    $reste=$reste%86400;
+                    $heures=floor($reste/3600);
+                    $reste=$reste%3600;
+                    $minutes=floor($reste/60);
+
+                    if($semaines > 1){
+                        if($date1 == null) $phrase_derniere_connexion = "Jamais connecté";
+                        else $phrase_derniere_connexion = "Connecté il y a ".$semaines." semaines";
+                    }
+                    else if($semaines == 1){
+                        $phrase_derniere_connexion = "Connecté il y a 1 semaine";
+                    }
+                    else if($jours > 1){
+                        $phrase_derniere_connexion = "Connecté il y a ".$jours." jours";
+                    }
+                    else if($jours == 1){
+                        $phrase_derniere_connexion = "Connecté il y a 1 jour";
+                    }
+                    else if($heures > 1){
+                        $phrase_derniere_connexion = "Connecté il y a ".$heures." heures";
+                    }
+                    else if($heures == 1){
+                        $phrase_derniere_connexion = "Connecté il y a 1 heure";
+                    }
+                    else if($minutes >= 10){
+                        $phrase_derniere_connexion = "Connecté il y a ".$minutes." minutes";
+                    }
+                    else{
+                        $phrase_derniere_connexion = "Connecté il y a moins de 10 minutes";
+                    }
+
+                    echo "<tr>
+                            <td>" . $element["username"] ."</td>
+                            <td>" . $phrase_derniere_connexion ."</td>
+                          </tr>";
+                }
+                echo "</table>";
                 return $result;
             }
             else {    // SI L'UTILISATEUR N'A PAS D'AMIS/D'INVITATION
@@ -187,12 +263,34 @@
         }
     }
 
-function recup_liste_invitations(int $user_id){
+function recup_liste_invitations_recues_a_confirmer(int $user_id){
     $db = $GLOBALS['db'];
     try {
-        $statement = $db->prepare("SELECT u.username AS friend_username, friend_user_id, confirmed FROM friend f, user u WHERE u.id = f.friend_user_id AND (user_id = :user_id OR friend_user_id = :user_id) AND confirmed=0");
+        $statement = $db->prepare("SELECT username FROM user WHERE id IN (
+                                            SELECT user_id FROM friend WHERE confirmed = 0 AND friend_user_id = :user_id
+                                            )");
         $statement->bindParam('user_id', $user_id);
+        $statement->execute();
+        $result = $statement->fetchAll();
 
+        if ($statement->rowCount() > 0) { // SI L'UTILISATEUR A DES AMIS/INVITATIONS
+            return $result;
+        }
+        else {    // SI L'UTILISATEUR N'A PAS D'AMIS/D'INVITATION
+            return null;
+        }
+    } catch (PDOException $e) {
+        echo $e;
+    }
+}
+
+function recup_liste_invitations_envoyees_a_confirmer(int $user_id){
+    $db = $GLOBALS['db'];
+    try {
+        $statement = $db->prepare("SELECT username FROM user WHERE id IN (
+                                            SELECT friend_user_id FROM friend WHERE confirmed = 0 AND user_id = :user_id
+                                            )");
+        $statement->bindParam('user_id', $user_id);
         $statement->execute();
         $result = $statement->fetchAll();
 
