@@ -167,6 +167,7 @@
 
     // FONCTION DE CONFIRMATION D'UNE RELATION D'AMITIE ENTRE DEUX USER
     // ACTION = 1 : INVITATION ACCEPTEE
+    // ACTION = -1 : INVITATION REFUSEE
 
 function maj_invitation_ami(int $user_id, String $friend_username, int $action){
     try {
@@ -185,8 +186,8 @@ function maj_invitation_ami(int $user_id, String $friend_username, int $action){
             $statement->execute();
         }
         else{
-            // ON MET A JOUR L'ETAT DE LA DEMANDE A CONFIRMED = 0 POUR LA DEMANDE DE A VERS B
-            $statement = $db->prepare("UPDATE friend SET confirmed = -1 WHERE friend_user_id = :user_id AND  user_id = (SELECT id FROM user WHERE username = :friend_username)");
+            // ON SUPPRIME LA DEMANDE D'AMIS
+            $statement = $db->prepare("DELETE FROM friend WHERE friend_user_id = :user_id AND  user_id = (SELECT id FROM user WHERE username = :friend_username)");
             $statement->bindParam('user_id', $user_id);
             $statement->bindParam('friend_username', $friend_username);
             $statement->execute();
@@ -208,7 +209,8 @@ function maj_invitation_ami(int $user_id, String $friend_username, int $action){
 
             if ($statement->rowCount() > 0) { // SI L'UTILISATEUR A DES AMIS/INVITATIONS
                 echo "<table>";
-                foreach($result as $element){
+                foreach($result as &$element){
+
                     $date1 = strtotime($element["last_connection"]);
                     $date2 = strtotime(date("d-m-Y H:i",time()));
 
@@ -247,10 +249,11 @@ function maj_invitation_ami(int $user_id, String $friend_username, int $action){
                         $phrase_derniere_connexion = "Connecté il y a moins de 10 minutes";
                     }
 
-                    echo "<tr>
+                    /*echo "<tr>
                             <td>" . $element["username"] ."</td>
                             <td>" . $phrase_derniere_connexion ."</td>
-                          </tr>";
+                          </tr>";*/
+                    $element["last_connection"] = $phrase_derniere_connexion;
                 }
                 echo "</table>";
                 return $result;

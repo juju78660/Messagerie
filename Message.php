@@ -33,20 +33,16 @@ session_start();
     </form>
     </br>
     <div id="messages_window">
-        <div id="conversations_panel">
-            <div class="conversation"></div>
-            <div class="conversation"></div>
-            <div class="conversation"></div>
-            <div class="conversation"></div>
-            <div class="conversation"></div>
-            <div class="conversation"></div>
-            <div class="conversation"></div>
+        <div id="conversations_panel" class="block">
             <div class="conversation"></div>
         </div>
-        <div id="message_text_field">
-            ICI
+        <div id="message_text_field" class="block">
+            <form>
+                <input type="text">
+                <input type="submit" value="Envoyer">
+            </form>
         </div>
+        <br clear="both" />
     </div>
-
     </body>
 </html>

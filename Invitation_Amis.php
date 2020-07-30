@@ -34,17 +34,18 @@ session_start();
     <?php
         include_once 'Fonctions_DB.php';
         $resultat = recup_liste_amis($_SESSION['id']);
-        if(is_null($resultat)){
+        if(empty($resultat)){
             echo ("Rien à afficher");
         }
         else{
-            /*echo ("<table>");
+            echo ("<table>");
             foreach($resultat as $element){
                 echo "<tr>
                         <td>" . $element["username"] ."</td>
+                        <td>" . $element["last_connection"] ."</td>
                   </tr>";
             }
-            echo ("</table>");*/
+            echo ("</table>");
         }
     ?>
 
@@ -52,7 +53,7 @@ session_start();
     <?php
     include_once 'Fonctions_DB.php';
     $resultat = recup_liste_invitations_envoyees_a_confirmer($_SESSION['id']);
-    if(is_null($resultat)){
+    if(empty($resultat)){
         echo ("Rien à afficher");
     }
     else{
@@ -71,7 +72,7 @@ session_start();
     <?php
     include_once 'Fonctions_DB.php';
     $resultat = recup_liste_invitations_recues_a_confirmer($_SESSION['id']);
-    if(is_null($resultat)){
+    if(empty($resultat)){
         echo ("Rien à afficher");
     }
     else{
@@ -83,11 +84,6 @@ session_start();
                         <td><button class='accept_decline_button' type=\"submit\" name=\"accept\" value=\"". $element["username"] ."\"> <img src=\"accept.png\" alt=\"Accept button image\" class='image_button_accept_decline_request'></button></td>
                         <td><button class='accept_decline_button' type=\"submit\" name=\"decline\" value=\"". $element["username"] ."\"> <img src=\"decline.png\" alt=\"Decline button image\" class='image_button_accept_decline_request'></button></td>
                       </tr>";
-            /*echo "<tr>
-                        <td>" . $element["username"] ."</td>
-                        <td><img src=\"accept.png\" id='accept_". $element["username"] ."' alt=\"Accept_Invitation_button\" height=25 width=25></td>
-                        <td><img src=\"decline.png\" id='decline_". $element["username"] ."' alt=\"Decline_Invitation_button\" height=25 width=25></td>
-                      </tr>";*/
         }
         echo ("</form></table>");
     }
@@ -136,6 +132,7 @@ if (isset($_POST['username'])) {
         }
     }
 }
+// CODE POUR TRAITER L'ACCEPTATION OU LE REFUS D'UNE DEMANDE D'AMIS
 else if (isset($_POST['accept']) OR isset($_POST['decline'])) {
     $user_id = $_SESSION['id'];
     $username = $_SESSION['username'];
