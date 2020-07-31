@@ -200,9 +200,7 @@ function maj_invitation_ami(int $user_id, String $friend_username, int $action){
     function recup_liste_amis(int $user_id){
         $db = $GLOBALS['db'];
         try {
-            $statement = $db->prepare("SELECT username, last_connection FROM user WHERE id IN (
-                                            SELECT friend_user_id FROM friend WHERE confirmed = 1 AND user_id = :user_id
-                                            )");
+            $statement = $db->prepare("SELECT username, last_connection FROM user");
             $statement->bindParam('user_id', $user_id);
             $statement->execute();
             $result = $statement->fetchAll();

@@ -9,6 +9,7 @@ session_start();
         <link rel="stylesheet" type="text/css" href="Style.css">
     </head>
     <body>
+
     <?php
         include 'Header.php';
     ?>
@@ -34,13 +35,32 @@ session_start();
     </br>
     <div id="messages_window">
         <div id="conversations_panel" class="block">
-            <div class="conversation"></div>
+            <?php
+            include_once 'Fonctions_DB.php';
+            $resultat = recup_liste_amis($_SESSION['id']);
+            if(empty($resultat)){
+                echo ("Aucun amis");
+            }
+            else{
+                foreach($resultat as $element){
+                    echo "<div class='conversation'>
+                            <div class='conversation_pseudo'>".$element["username"]."</div>
+                            <div class='conversation_pseudo_last_connection'>".$element["last_connection"]."</div>
+                          </div>";
+                }
+            }
+            ?>
         </div>
-        <div id="message_text_field" class="block">
-            <form>
-                <input type="text">
-                <input type="submit" value="Envoyer">
-            </form>
+        <div id="right_panel" class="block">
+            <div id="messages_list">
+                ICI
+            </div>
+            <div id="message_text_field">
+                <form>
+                    <input type="textarea" id="message_input" name="textarea"></inputtextarea>
+                    <input type="submit" value="Envoyer" style="height: 50px">
+                </form>
+            </div>
         </div>
         <br clear="both" />
     </div>
