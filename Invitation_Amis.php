@@ -128,6 +128,7 @@ if (isset($_POST['username'])) {
             }
             else {   // AUCUN LIEN N'EXISTE DEJA
                 ajout_ami($user_id, $friend_username);
+                header('Location: Invitation_Amis.php');
             }
         }
     }
@@ -139,10 +140,12 @@ else if (isset($_POST['accept']) OR isset($_POST['decline'])) {
     if(isset($_POST['accept'])){
         $friend_username = $_POST['accept'];
         maj_invitation_ami($user_id, $friend_username, 1);
+        header('Location: Invitation_Amis.php');
     }
     else{
         $friend_username = $_POST['decline'];
         maj_invitation_ami($user_id, $friend_username, -1);
+        header('Location: Invitation_Amis.php');
     }
 }
 ?>

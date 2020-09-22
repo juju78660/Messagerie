@@ -13,51 +13,42 @@ session_start();
     <?php
         include 'Header.php';
     ?>
-    <p><b>Ecrire à un ami:</b></p>
-    <form action="Message.php" method="POST">
-        <p>
-            <label>Nom d'utilisateur</label>
-            <input name='username' type="text" required>
-        </p>
-        <input id='submit' type="submit" value="Envoyer la demande d'ami">
-        <?php
-        if(isset($_GET['erreur'])){
-            $err = $_GET['erreur'];
-            if($err==1)
-                echo "<p style='color:red'>Vous ne pouvez pas vous envoyer un message</p>";
-            else if($err==2)
-                echo "<p style='color:red'>L'utilisateur n'existe pas</p>";
-            else if($err==3)
-                echo "<p style='color:red'>Vous êtes déjà ami avec cette personne, ou une invitation est en attente d'acceptation</p>";
-        }
-        ?>
-    </form>
-    </br>
+
     <div id="messages_window">
         <div id="conversations_panel" class="block">
             <?php
             include_once 'Fonctions_DB.php';
-            $resultat = recup_liste_amis($_SESSION['id']);
+            $resultat = recup_liste_conversations($_SESSION['id']);
             if(empty($resultat)){
-                echo ("Aucun amis");
+                echo "<div class='conversation'>
+                        <div class='conversation_title'>Aucune conversation</div>
+                      </div>";
             }
             else{
                 foreach($resultat as $element){
-                    echo "<div class='conversation'>
-                            <div class='conversation_pseudo'>".$element["username"]."</div>
-                            <div class='conversation_pseudo_last_connection'>".$element["last_connection"]."</div>
+                    $titre_conversation = $element['title'];
+                    $id_conversation = $element['id'];
+                    echo "<div class='conversation' style=\"cursor: pointer;\" onclick=\"window.location='?conversation_id=$id_conversation';\">
+                            <div class='conversation_title'>".$titre_conversation."</div>
                           </div>";
                 }
             }
+            echo "<div id='create_conversation' style=\"cursor: pointer;\" onclick=\"window.location='?creation_conv';\">
+                            <div class='conversation_title_creation'>Créer une nouvelle conversation</div>
+                  </div>";
             ?>
+
         </div>
         <div id="right_panel" class="block">
+            <div id="conversation_title">
+                NOM CONVERSATION
+            </div>
             <div id="messages_list">
-                ICI
+                MESSAGE LIST
             </div>
             <div id="message_text_field">
-                <form>
-                    <input type="textarea" id="message_input" name="textarea"></inputtextarea>
+                <form method="POST">
+                    <textarea type="textarea" id="message_input" name="textarea"></textarea>
                     <input type="submit" value="Envoyer" style="height: 50px">
                 </form>
             </div>

@@ -5,7 +5,6 @@
         session_unset();
         header("location:Connexion.php");
     }
-
     $actual_link = str_replace("http://juson.alwaysdata.net/", "", "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
     if($actual_link == "Invitation_Amis.php"){
         echo "<ul id=\"menu_header\">
