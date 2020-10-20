@@ -8,7 +8,7 @@ Aucun framework utilisé
 * Affichage conversations et messages :heavy_check_mark:  
 * Interface messagerie :heavy_check_mark:  
 * Système de conversations de groupe :construction:  
-* **Sécurité/Confidentialité (Communications chiffrées, Clé privées et publiques)** :construction:  
+* **Sécurité/Confidentialité** (Communications chiffrées, Clé privées et publiques) :construction:  
 * Possible changement de technologie pour utiliser Laravel ? :construction:  
 
 ## Technologies/Langages utilisés:  
