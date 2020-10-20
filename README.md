@@ -3,10 +3,10 @@ Projet personnel de création d'un site web et d'une future application reprenan
 Aucun framework utilisé
 
 ## Avancement:  
-* Système d'invitations :white_check_mark:  
-* Système d'amis :white_check_mark:  
-* Affichage conversations et messages :white_check_mark:  
-* Interface messagerie :white_check_mark:  
+* Système d'invitations :heavy_check_mark:  
+* Système d'amis :heavy_check_mark:  
+* Affichage conversations et messages :heavy_check_mark:  
+* Interface messagerie :heavy_check_mark:  
 * Système de conversations de groupe :construction:  
 * Possible changement de technologie pour utiliser Laravel ? :construction:  
 
